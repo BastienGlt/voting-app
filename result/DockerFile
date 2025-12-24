@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copier package.json et package-lock.json (layer cache optimisé)
+COPY package*.json ./
+
+# Installer les dépendances en mode production
+RUN npm ci --only=production && npm cache clean --force
+
+# Copier le reste de l'application
+COPY . .
+
+EXPOSE 80
+
+# Créer un utilisateur non-root pour la sécurité
+RUN adduser -D -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+CMD ["node", "server.js"]

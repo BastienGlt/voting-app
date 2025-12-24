@@ -11,7 +11,7 @@ let express = require("express"),
 
 io.set("transports", ["polling"])
 
-const port = 8888
+const port = process.env.PORT || 80
 
 io.sockets.on("connection", function (socket) {
 
@@ -22,8 +22,9 @@ io.sockets.on("connection", function (socket) {
   })
 })
 
+const dbHost = process.env.DB_HOST || "db"
 const pool = new pg.Pool({
-  connectionString: "postgres://postgres:postgres@localhost/postgres",
+  connectionString: `postgres://postgres:postgres@${dbHost}/postgres`,
 })
 
 async.retry(
