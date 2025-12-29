@@ -1,8 +1,6 @@
-version: "3.9"
-
 services:
   redis:
-    image: redis:7-alpine
+    image: redis:7
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -10,11 +8,11 @@ services:
     networks: [backend]
 
   db:
-    image: postgres:15-alpine
+    image: postgres:15
     environment:
       POSTGRES_USER: vote
       POSTGRES_PASSWORD: vote
-      POSTGRES_DB: votes
+      POSTGRES_DB: vote
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
