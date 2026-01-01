@@ -1,37 +1,68 @@
 services:
+
+  # Définition du module redis
   redis:
     image: redis:7
+
+
+    # Vérifie que redis tourne bien 
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 5
     networks: [backend]
 
+
+
+  # Définition du moduel db
   db:
     image: postgres:15
+
+
+    # Définition variables d'environnement PostgreSQL
     environment:
       POSTGRES_USER: vote
       POSTGRES_PASSWORD: vote
       POSTGRES_DB: vote
+
+
+    # Définition volume 
     volumes:
       - db-data:/var/lib/postgresql/data
+
+
+
+    # Définition de healthcheck pour voir si la bdd tourne   
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vote"]
       interval: 5s
       retries: 5
     networks: [backend]
 
+
+
+
+  # Définiton du module vote
   vote:
     build: ./vote
+
+    # Définition du port 8080
     ports:
       - "8080:8080"
+
+    # S'assure que redis est bien lancé  
     depends_on:
       redis:
         condition: service_healthy
     networks: [frontend, backend]
 
+
+
+  # Définition du module worker
   worker:
     build: ./worker
+
+    # S'assure que redis et la db est bien lancé 
     depends_on:
       redis:
         condition: service_healthy
@@ -39,14 +70,24 @@ services:
         condition: service_healthy
     networks: [backend]
 
+
+
+  # Définition du module result
   result:
     build: ./result
+
+    # Définition du port 7000
     ports:
       - "7000:7000"
+
+    # S'assure que la db est bien lancé  
     depends_on:
       db:
         condition: service_healthy
     networks: [frontend, backend]
+
+
+
 
 volumes:
   db-data:

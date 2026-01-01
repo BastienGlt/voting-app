@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+# Enlève les caches 
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Le met sur le port 8080
 EXPOSE 8080
 
 CMD ["python", "app.py"]

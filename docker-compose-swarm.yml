@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  redis:
+    image: voting-app_redis:latest  # Ou votre registry: voting-app/redis:latest
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: voting-app_db:latest
+    environment:
+      POSTGRES_USER: vote
+      POSTGRES_PASSWORD: vote
+      POSTGRES_DB: vote
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager  # Pour éviter perte de données
+      restart_policy:
+        condition: on-failure
+
+  vote:
+    image: voting-app_vote:latest
+    ports:
+      - target: 80
+        published: 8080
+        mode: host  # Meilleur pour Swarm (ingress routing mesh)
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 3  # Plus que 2 pour haute disponibilité
+      restart_policy:
+        condition: on-failure
+
+  result:
+    image: voting-app_result:latest
+    ports:
+      - target: 80
+        published: 7000
+        mode: host
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+  worker:
+    image: voting-app_worker:latest
+    networks:
+      - backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  db-data:
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
