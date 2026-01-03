@@ -1,20 +1,16 @@
 FROM node:18-alpine
 
+# Installation de curl pour le healthcheck
+RUN apk --no-cache add curl
+
 WORKDIR /app
 
-# Copier package.json et package-lock.json (layer cache optimisé)
 COPY package*.json ./
+RUN npm ci
 
-# Installer les dépendances en mode production
-RUN npm ci --only=production && npm cache clean --force
-
-# Copier le reste de l'application
 COPY . .
 
-EXPOSE 80
-
-# Créer un utilisateur non-root pour la sécurité
-RUN adduser -D -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+ENV PORT=8888
+EXPOSE 8888
 
 CMD ["node", "server.js"]

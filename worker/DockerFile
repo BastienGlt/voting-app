@@ -1,24 +1,16 @@
+# worker/Dockerfile
+
+# Étape 1 : Compilation (Image lourde avec le SDK)
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
-
-# Copier le fichier de projet et restaurer les dépendances (layer cache optimisé)
-COPY Worker.csproj .
+WORKDIR /source
+COPY *.csproj .
 RUN dotnet restore
-
-# Copier le reste du code source
 COPY . .
+RUN dotnet publish -c Release -o /app/publish
 
-# Builder l'application en mode Release
-RUN dotnet publish -c Release -o /app/publish --no-restore
-
+# Étape 2 : Exécution (Image légère avec juste le Runtime)
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
-
-# Copier les fichiers publiés depuis l'étape de build
 COPY --from=build /app/publish .
-
-# Créer un utilisateur non-root pour la sécurité
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
 
 CMD ["dotnet", "Worker.dll"]

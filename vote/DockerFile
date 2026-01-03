@@ -1,23 +1,15 @@
+# vote/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Installer dépendances (layer cache optimisé)
+# On copie d'abord les dépendances pour optimiser le cache Docker
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code
+# On copie le code
 COPY . .
 
-# Variables d'environnement
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=80
+EXPOSE 8080
 
-EXPOSE 80
-
-# Créer un utilisateur non-root pour la sécurité
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
-# Utiliser gunicorn pour la production
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "--workers", "4", "app:app"]
+CMD ["python", "app.py", "--host", "0.0.0.0", "--port", "80"]

@@ -1,80 +1,75 @@
-version: "3.9"
+version: '3.8'
 
 services:
   vote:
     build: ./vote
+    image: voting-app-vote
     ports:
-      - "8080:80"
-    environment:
-      - REDIS_HOST=redis
-    depends_on:
-      redis:
-        condition: service_healthy
+      - "5000:8080"
     networks:
       - frontend
       - backend
-    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   result:
     build: ./result
+    image: voting-app-result
     ports:
-      - "8081:80"
-    environment:
-      - DB_HOST=db
-      - PORT=80
-    depends_on:
-      db:
-        condition: service_healthy
+      - "5001:8888"
     networks:
       - frontend
       - backend
-    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888"] # Nécessite que curl soit dans l'image alpine
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   worker:
     build: ./worker
-    environment:
-      - REDIS_HOST=redis
-      - DB_HOST=db
+    image: voting-app-worker
+    networks:
+      - backend
     depends_on:
       redis:
         condition: service_healthy
       db:
         condition: service_healthy
-    networks:
-      - backend
-    restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    image: redis:alpine
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
-    networks:
-      - backend
-    restart: unless-stopped
 
   db:
     image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
     volumes:
       - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
-    networks:
-      - backend
-    restart: unless-stopped
 
 volumes:
   db-data:
