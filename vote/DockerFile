@@ -1,0 +1,15 @@
+# vote/Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# On copie d'abord les dépendances pour optimiser le cache Docker
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# On copie le code
+COPY . .
+
+EXPOSE 8080
+
+CMD ["python", "app.py", "--host", "0.0.0.0", "--port", "80"]

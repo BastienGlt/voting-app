@@ -12,3 +12,8 @@
 
 # Logs
 *.log
+
+.vagrant/
+
+swarm-manager-token
+swarm-worker-token

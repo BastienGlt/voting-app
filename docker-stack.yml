@@ -1,0 +1,65 @@
+version: "3.8"
+services:
+  vote:
+    image: bastien59/vote:latest
+    ports:
+      - "5000:8080"
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == worker]
+
+  result:
+    image: bastien59/result:latest
+    ports:
+      - "5001:8888"
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.role == worker]
+
+  worker:
+    image: bastien59/worker:latest
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:alpine
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+volumes:
+  db-data:
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
